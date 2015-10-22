@@ -14,6 +14,7 @@ public class Game extends ApplicationAdapter {
     float width, height;
     OrthographicCamera camera;
     Player player;
+    Number number;
 	
 	@Override
 	public void create () {
@@ -27,6 +28,7 @@ public class Game extends ApplicationAdapter {
         camera.setToOrtho(false, width, height);
 
         player = new Player();
+        number = new Number(width, height);
 	}
 
 	@Override
@@ -35,11 +37,12 @@ public class Game extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         updateInput();
-
+        updateObjects();
 
 		batch.begin();
 		    batch.draw(background, 0, 0);
-            batch.draw(player.getTexture(), player.getCollisionBox().getX(), player.getCollisionBox().getY());
+            batch.draw(player.getTexture(), player.getX(), player.getY());
+            batch.draw(number.getTexture(), number.getX(), number.getY());
 		batch.end();
 
         camera.update();
@@ -49,6 +52,17 @@ public class Game extends ApplicationAdapter {
     public void resize(int width, int height)
     {
         camera.setToOrtho(false, width, height);
+    }
+
+    public void updateObjects()
+    {
+        number.move();
+
+        if(number.getCollisionBox().overlaps(player.getCollisionBox()))
+            System.out.println("Player collided with the number!"); //Stuff happens!
+
+        if(number.getY() < 0 - number.getTexture().getHeight())
+            System.out.println("Number has reached the end of the screen!"); //Stuff happens!
     }
 
     public void updateInput()
