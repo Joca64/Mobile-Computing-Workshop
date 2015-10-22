@@ -3,10 +3,13 @@ package com.mygdx.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
@@ -14,17 +17,19 @@ import java.util.Iterator;
 import java.util.Random;
 
 public class Game extends ApplicationAdapter {
-	SpriteBatch batch;
-	Texture background;
-    float width, height;
-    OrthographicCamera camera;
-    Player player;
-    Array<Number> numbers;
-    int dropDelay, firstNumber, secondNumber;
-    long lastNumberSpawn;
-    Operation operation;
-	
-	@Override
+	private SpriteBatch batch;
+    private Texture background;
+    private float width, height;
+    private OrthographicCamera camera;
+    private Player player;
+    private Array<Number> numbers;
+    private int dropDelay, firstNumber, secondNumber;
+    private long lastNumberSpawn;
+    private Operation operation;
+    private String operationDisplay;
+    private BitmapFont font;
+
+    @Override
 	public void create () {
 		batch = new SpriteBatch();
 		background = new Texture("images/background.png");
@@ -40,6 +45,15 @@ public class Game extends ApplicationAdapter {
         dropDelay = getRandom(1000, 2500);
         lastNumberSpawn = TimeUtils.millis();
         generateOperation();
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/kenpixel_high_square.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 48;
+        parameter.borderColor = Color.BLACK;
+        parameter.color = Color.NAVY;
+        parameter.borderStraight = true;
+        font = generator.generateFont(parameter);
+        generator.dispose();
     }
 
     private void generateOperation()
@@ -47,6 +61,7 @@ public class Game extends ApplicationAdapter {
         firstNumber = -1;
         secondNumber = -1;
         operation = new Operation();
+        operationDisplay = "_" +operation.getOperator() +"_=" +operation.getResult();
     }
 
     @Override
@@ -62,6 +77,7 @@ public class Game extends ApplicationAdapter {
             batch.draw(player.getTexture(), player.getX(), player.getY());
             for(Number number : numbers)
                 batch.draw(number.getTexture(), number.getX(), number.getY());
+            font.draw(batch, operationDisplay, 10, height - 20);
 		batch.end();
 
         camera.update();
@@ -90,13 +106,17 @@ public class Game extends ApplicationAdapter {
             if (tempNumber.getCollisionBox().overlaps(player.getCollisionBox()))
             {
                 if(firstNumber == -1)
+                {
                     firstNumber = tempNumber.getValue();
+                    operationDisplay = firstNumber + operation.getOperator() + "_=" + operation.getResult();
+                }
                 else
                 {
                     secondNumber = tempNumber.getValue();
 
                     if(operation.validateResult(firstNumber, secondNumber))
                         System.out.println("Correct!");
+
                     else
                         System.out.println("Incorrect!");
                     generateOperation();
