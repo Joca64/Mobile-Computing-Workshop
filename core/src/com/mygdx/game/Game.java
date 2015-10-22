@@ -7,6 +7,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
+
+import java.util.Iterator;
+import java.util.Random;
 
 public class Game extends ApplicationAdapter {
 	SpriteBatch batch;
@@ -14,7 +19,9 @@ public class Game extends ApplicationAdapter {
     float width, height;
     OrthographicCamera camera;
     Player player;
-    Number number;
+    Array<Number> numbers;
+    int dropDelay;
+    long lastNumberSpawn;
 	
 	@Override
 	public void create () {
@@ -28,8 +35,10 @@ public class Game extends ApplicationAdapter {
         camera.setToOrtho(false, width, height);
 
         player = new Player();
-        number = new Number(width, height);
-	}
+        numbers = new Array<Number>();
+        dropDelay = getRandom(1000, 2500);
+        lastNumberSpawn = TimeUtils.millis();
+    }
 
 	@Override
 	public void render () {
@@ -42,7 +51,8 @@ public class Game extends ApplicationAdapter {
 		batch.begin();
 		    batch.draw(background, 0, 0);
             batch.draw(player.getTexture(), player.getX(), player.getY());
-            batch.draw(number.getTexture(), number.getX(), number.getY());
+            for(Number number : numbers)
+                batch.draw(number.getTexture(), number.getX(), number.getY());
 		batch.end();
 
         camera.update();
@@ -56,13 +66,38 @@ public class Game extends ApplicationAdapter {
 
     public void updateObjects()
     {
-        number.move();
+        if(TimeUtils.millis() - lastNumberSpawn > dropDelay)
+        {
+            dropDelay = getRandom(1000, 2500);
+            generateNumber();
+        }
 
-        if(number.getCollisionBox().overlaps(player.getCollisionBox()))
-            System.out.println("Player collided with the number!"); //Stuff happens!
+        Iterator<Number> iter = numbers.iterator();
+        while(iter.hasNext())
+        {
+            Number tempNumber = iter.next();
+            tempNumber.move();
 
-        if(number.getY() < 0 - number.getTexture().getHeight())
-            System.out.println("Number has reached the end of the screen!"); //Stuff happens!
+            if (tempNumber.getCollisionBox().overlaps(player.getCollisionBox()))
+            {
+                System.out.println("Player collided with the number!"); //Stuff happens!
+                iter.remove();
+                tempNumber.remove();
+            }
+
+            if (tempNumber.getY() < 0 - tempNumber.getTexture().getHeight())
+            {
+                System.out.println("Number has reached the end of the screen!"); //Stuff happens!
+                iter.remove();
+                tempNumber.remove();
+            }
+        }
+    }
+
+    private void generateNumber()
+    {
+        numbers.add(new Number(width, height));
+        lastNumberSpawn = TimeUtils.millis();
     }
 
     public void updateInput()
@@ -81,5 +116,11 @@ public class Game extends ApplicationAdapter {
             else if(player.getX() < width - player.getTexture().getWidth())
                 player.moveRight();
         }
+    }
+
+    private int getRandom(int min, int max)
+    {
+        Random rnd = new Random();
+        return rnd.nextInt(max - min) + min;
     }
 }
