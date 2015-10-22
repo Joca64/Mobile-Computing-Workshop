@@ -20,8 +20,9 @@ public class Game extends ApplicationAdapter {
     OrthographicCamera camera;
     Player player;
     Array<Number> numbers;
-    int dropDelay;
+    int dropDelay, firstNumber, secondNumber;
     long lastNumberSpawn;
+    Operation operation;
 	
 	@Override
 	public void create () {
@@ -38,9 +39,17 @@ public class Game extends ApplicationAdapter {
         numbers = new Array<Number>();
         dropDelay = getRandom(1000, 2500);
         lastNumberSpawn = TimeUtils.millis();
+        generateOperation();
     }
 
-	@Override
+    private void generateOperation()
+    {
+        firstNumber = -1;
+        secondNumber = -1;
+        operation = new Operation();
+    }
+
+    @Override
 	public void render () {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -80,6 +89,18 @@ public class Game extends ApplicationAdapter {
 
             if (tempNumber.getCollisionBox().overlaps(player.getCollisionBox()))
             {
+                if(firstNumber == -1)
+                    firstNumber = tempNumber.getValue();
+                else
+                {
+                    secondNumber = tempNumber.getValue();
+
+                    if(operation.validateResult(firstNumber, secondNumber))
+                        System.out.println("Correct!");
+                    else
+                        System.out.println("Incorrect!");
+                    generateOperation();
+                }
                 System.out.println("Player collided with the number!"); //Stuff happens!
                 iter.remove();
                 tempNumber.remove();
