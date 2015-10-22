@@ -3,6 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -28,11 +29,16 @@ public class Game extends ApplicationAdapter {
     private Operation operation;
     private String operationDisplay;
     private BitmapFont font;
+    private Sound correct, incorrect, pickup;
 
     @Override
 	public void create () {
 		batch = new SpriteBatch();
 		background = new Texture("images/background.png");
+
+        correct = Gdx.audio.newSound(Gdx.files.internal("sounds/correct.wav"));
+        incorrect = Gdx.audio.newSound(Gdx.files.internal("sounds/incorrect.wav"));
+        pickup = Gdx.audio.newSound(Gdx.files.internal("sounds/pickup.wav"));
 
         width = Gdx.graphics.getWidth();
         height = Gdx.graphics.getHeight();
@@ -105,6 +111,7 @@ public class Game extends ApplicationAdapter {
 
             if (tempNumber.getCollisionBox().overlaps(player.getCollisionBox()))
             {
+                pickup.play();
                 if(firstNumber == -1)
                 {
                     firstNumber = tempNumber.getValue();
@@ -115,10 +122,10 @@ public class Game extends ApplicationAdapter {
                     secondNumber = tempNumber.getValue();
 
                     if(operation.validateResult(firstNumber, secondNumber))
-                        System.out.println("Correct!");
+                        correct.play();
 
                     else
-                        System.out.println("Incorrect!");
+                        incorrect.play();
                     generateOperation();
                 }
                 System.out.println("Player collided with the number!"); //Stuff happens!
